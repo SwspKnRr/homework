@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homework — 숙제 관리</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d12;--panel:#131722;--panel2:#191f2c;--line:#293143;--text:#edf1f8;--muted:#929db2;--accent:#9b8cff;--accent2:#6fe0c0;--danger:#ff7c8a;--yellow:#f3c969}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#1a1c32 0,transparent 40%),var(--bg);color:var(--text);font:15px/1.5 Inter,Pretendard,"Noto Sans KR",system-ui,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:9px 12px;color:var(--text);background:var(--panel2)}button:hover{border-color:#7770bd}button.primary{background:var(--accent);color:#100e20;border-color:transparent;font-weight:700}button.danger{color:var(--danger)}button.small{font-size:12px;padding:6px 9px}
+.wrap{max-width:1050px;margin:auto;padding:32px 20px 60px}.top{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:26px}.eyebrow{font-size:11px;letter-spacing:.18em;color:var(--accent2);font-weight:800}.title{font-size:clamp(28px,4vw,38px);font-weight:800;letter-spacing:-.04em;margin:4px 0}.subtitle{color:var(--muted);margin:0}.rolebox{display:flex;gap:6px;padding:5px;background:var(--panel);border:1px solid var(--line);border-radius:13px;flex-shrink:0}.rolebox button{border:0;background:transparent;color:var(--muted)}.rolebox button.active{background:var(--panel2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.stat,.card{background:linear-gradient(145deg,#151a26,#11151e);border:1px solid var(--line);border-radius:16px}.stat{padding:17px 19px}.stat label{color:var(--muted);font-size:12px}.stat strong{display:block;font-size:27px;margin-top:5px;letter-spacing:-.04em}.progress{padding:17px 19px;margin-bottom:20px}.progress-head{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-bottom:10px}.muted{color:var(--muted)}.track{height:7px;background:#272d3a;border-radius:99px;overflow:hidden}.fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .25s}
+.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin:22px 0 14px}.filters{display:flex;gap:7px;flex-wrap:wrap}.filters button.active{border-color:var(--accent);color:var(--accent)}.list{display:grid;gap:12px}.homework{padding:17px 18px}.hw-top{display:flex;gap:12px;align-items:flex-start}.check{appearance:none;width:20px;height:20px;border:1.5px solid #59647b;border-radius:6px;margin:3px 0 0;flex-shrink:0;cursor:pointer;background:transparent}.check:checked{background:var(--accent2);border-color:var(--accent2)}.check:checked:after{content:"✓";display:block;text-align:center;color:#101a1b;font-weight:900;line-height:17px}.hw-main{flex:1;min-width:0}.hw-title{font-size:16px;font-weight:750;overflow-wrap:anywhere}.done .hw-title{text-decoration:line-through;color:var(--muted)}.meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.pill{font-size:11px;padding:3px 8px;border-radius:99px;background:#252b3a;color:#c0c8da}.pill.subject{background:#272341;color:#c4baff}.pill.overdue{background:#3b2028;color:#ff9aa5}.pill.ok{background:#17352f;color:#8ce8c8}.actions{display:flex;gap:6px;flex-wrap:wrap}.memo-area{margin:15px 0 0 32px;border-top:1px solid var(--line);padding-top:12px}.memo-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:12px;font-weight:750;margin-bottom:8px}.memo-preview{color:#c4cbda;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}.memo-empty{color:var(--muted);font-size:13px}.teacher-note{margin-top:10px;padding:10px 12px;border-radius:10px;background:#1b2030;color:#c9c6ff;font-size:13px;white-space:pre-wrap}.modal-back{position:fixed;inset:0;background:#05060bd9;display:none;align-items:center;justify-content:center;padding:18px;z-index:5}.modal-back.show{display:flex}.modal{width:min(560px,100%);max-height:92vh;overflow:auto;background:#141925;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 24px 90px #0008}.modal h2{margin:0 0 18px;font-size:21px}.form{display:grid;gap:13px}.field{display:grid;gap:6px}.field label{font-size:12px;color:var(--muted)}input[type=text],input[type=date],select,textarea{width:100%;background:#0d111a;border:1px solid var(--line);border-radius:10px;color:var(--text);padding:11px 12px;outline:none}textarea{min-height:90px;resize:vertical}input:focus,select:focus,textarea:focus{border-color:var(--accent)}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.empty{padding:35px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:15px}.footer{margin-top:26px;color:#687287;font-size:12px;text-align:center}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#e8e6ff;color:#151326;padding:10px 15px;border-radius:10px;font-size:13px;display:none;z-index:10;box-shadow:0 8px 30px #0005}.toast.show{display:block}
+@media(max-width:650px){.wrap{padding:22px 13px 40px}.top{display:block}.rolebox{margin-top:16px;width:max-content}.stats{gap:7px}.stat{padding:12px}.stat strong{font-size:23px}.homework{padding:14px}.actions{margin-left:32px}.memo-area{margin-left:0}.row{grid-template-columns:1fr}.toolbar{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><div class="eyebrow">STUDY SPACE / HOMEWORK</div><h1 class="title">숙제 관리</h1><p class="subtitle">해야 할 일부터 막혔던 문제까지, 한곳에 기록해.</p></div>
+  </header>
+  <section class="stats">
+    <div class="stat"><label>전체 숙제</label><strong id="totalCount">0</strong></div>
+    <div class="stat"><label>학생 완료</label><strong id="doneCount">0</strong></div>
+    <div class="stat"><label>검사 완료</label><strong id="checkedCount">0</strong></div>
+  </section>
+  <section class="card progress"><div class="progress-head"><span>전체 진행률</span><strong id="progressText">0%</strong></div><div class="track"><div id="progressFill" class="fill"></div></div></section>
+  <div class="toolbar"><div class="filters" id="filters"><button class="active" data-filter="all">전체</button><button data-filter="todo">미완료</button><button data-filter="memo">메모 있음</button><button data-filter="review">검사 필요</button></div><button class="primary" onclick="openHomework()">+ 숙제 추가</button></div>
+  <main id="homeworkList" class="list"></main>
+  <div class="footer">HOMEWORK MANAGER · 현재 브라우저에 자동 저장</div>
+</div>
+
+<div id="hwModal" class="modal-back" role="dialog" aria-modal="true">
+  <div class="modal"><h2 id="hwModalTitle">새 숙제 추가</h2>
+    <form id="hwForm" class="form">
+      <input id="hwId" type="hidden">
+      <div class="field"><label for="hwTitle">숙제 이름 *</label><input id="hwTitle" type="text" required maxlength="120" placeholder="예: 교재 42~45쪽 풀기"></div>
+      <div class="row"><div class="field"><label for="hwSubject">과목</label><input id="hwSubject" type="text" maxlength="30" placeholder="예: 수학"></div><div class="field"><label for="hwDue">마감일</label><input id="hwDue" type="date"></div></div>
+      <div class="field"><label for="hwDetail">추가 설명 (선택)</label><textarea id="hwDetail" maxlength="1000" placeholder="범위, 조건, 전달 사항 등"></textarea></div>
+      <div class="modal-actions"><button type="button" onclick="closeModal('hwModal')">취소</button><button class="primary" type="submit">저장</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="memoModal" class="modal-back" role="dialog" aria-modal="true">
+  <div class="modal"><h2 id="memoModalTitle">어려웠던 문제 메모</h2>
+    <form id="memoForm" class="form">
+      <input id="memoHwId" type="hidden">
+      <div class="field"><label for="problemNo">문제 번호</label><input id="problemNo" type="text" maxlength="80" placeholder="예: 12번, 프린트 3번"></div>
+      <div class="field"><label for="difficulty">어려웠던 이유</label><select id="difficulty"><option value="개념이 헷갈려요">개념이 헷갈려요</option><option value="풀이가 막혔어요">풀이가 막혔어요</option><option value="계산 실수">계산 실수</option><option value="문제 해석이 어려워요">문제 해석이 어려워요</option><option value="기타">기타</option></select></div>
+      <div class="field"><label for="memoText">내 메모</label><textarea id="memoText" maxlength="2000" placeholder="어디까지 풀었는지, 무엇이 궁금한지 적어 봐."></textarea></div>
+      <div id="teacherFeedbackField" class="field" style="display:none"><label for="teacherFeedback">선생님 피드백</label><textarea id="teacherFeedback" maxlength="2000" placeholder="설명할 내용이나 다음 수업에서 확인할 점"></textarea></div>
+      <div class="modal-actions"><button type="button" onclick="closeModal('memoModal')">취소</button><button class="primary" type="submit">메모 저장</button></div>
+    </form>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+const STORAGE_KEY = "homework-manager-v1";
+let items = loadItems(), filter = "all";
+function loadItems(){try{const v=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");return Array.isArray(v)?v:[]}catch{return []}}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(items));render();showToast("저장했어")}
+function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmtDate(d){if(!d)return "마감일 미정";const [y,m,day]=d.split("-");return `${y}.${m}.${day}`}
+function isOverdue(x){return x.due&&!x.done&&x.due<new Date().toLocaleDateString("en-CA")}
+function render(){
+ const done=items.filter(x=>x.done).length, checked=items.filter(x=>x.checked).length, pct=items.length?Math.round(done/items.length*100):0;
+ document.getElementById("totalCount").textContent=items.length;document.getElementById("doneCount").textContent=done;document.getElementById("checkedCount").textContent=checked;document.getElementById("progressText").textContent=pct+"%";document.getElementById("progressFill").style.width=pct+"%";
+ const shown=items.filter(x=>filter==="all"||filter==="todo"?! (filter==="todo"&&!x.done) : filter==="memo"?!!(x.memo||x.feedback):filter==="review"?x.done&&!x.checked:true);
+ // Use explicit filter logic to keep each view predictable.
+ const filtered=items.filter(x=>filter==="all"||(filter==="todo"&&!x.done)||(filter==="memo"&&!!(x.memo||x.feedback))||(filter==="review"&&x.done&&!x.checked));
+ const list=document.getElementById("homeworkList");
+ if(!filtered.length){list.innerHTML='<div class="empty">아직 표시할 숙제가 없어.<br><span class="muted">위의 ‘숙제 추가’ 버튼으로 시작해 봐.</span></div>';return}
+ list.innerHTML=filtered.slice().sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999")).map(x=>{
+ const overdue=isOverdue(x);
+ return `<article class="card homework ${x.done?'done':''}">
+  <div class="hw-top"><input class="check" type="checkbox" aria-label="학생 완료" ${x.done?'checked':''} onchange="toggleDone('${x.id}',this.checked)">
+   <div class="hw-main"><div class="hw-title">${esc(x.title)}</div><div class="meta">${x.subject?`<span class="pill subject">${esc(x.subject)}</span>`:""}<span class="pill ${overdue?'overdue':''}">${overdue?'마감 지남 · ':''}${esc(fmtDate(x.due))}</span>${x.done?'<span class="pill ok">학생 완료</span>':'<span class="pill">미완료</span>'}${x.checked?'<span class="pill ok">검사 완료</span>':(x.done?'<span class="pill">검사 필요</span>':'')}</div>${x.detail?`<p class="muted" style="margin:10px 0 0;white-space:pre-wrap">${esc(x.detail)}</p>`:""}</div>
+  </div>
+  <div class="actions" style="margin-top:13px"><button class="small" onclick="openMemo('${x.id}')">${x.memo?'메모 보기·수정':'어려운 문제 메모'}</button><button class="small" onclick="toggleChecked('${x.id}')">${x.checked?'검사 완료 해제':'검사 완료 표시'}</button><button class="small" onclick="editHomework('${x.id}')">수정</button><button class="small danger" onclick="deleteHomework('${x.id}')">삭제</button></div>
+  ${(x.memo||x.feedback)?`<div class="memo-area"><div class="memo-head"><span>문제 메모 ${x.problemNo?`· ${esc(x.problemNo)}`:""}</span><span class="pill">${esc(x.difficulty||"메모")}</span></div>${x.memo?`<div class="memo-preview">${esc(x.memo)}</div>`:'<div class="memo-empty">학생 메모 없음</div>'}${x.feedback?`<div class="teacher-note"><strong>선생님 피드백</strong><br>${esc(x.feedback)}</div>`:''}</div>`:""}
+ </article>`;
+ }).join("");
+}
+function openHomework(id=null){const x=items.find(v=>v.id===id);document.getElementById("hwForm").reset();document.getElementById("hwId").value=x?.id||"";document.getElementById("hwTitle").value=x?.title||"";document.getElementById("hwSubject").value=x?.subject||"";document.getElementById("hwDue").value=x?.due||"";document.getElementById("hwDetail").value=x?.detail||"";document.getElementById("hwModalTitle").textContent=x?"숙제 수정":"새 숙제 추가";document.getElementById("hwModal").classList.add("show");document.getElementById("hwTitle").focus()}
+function editHomework(id){openHomework(id)}
+function closeModal(id){document.getElementById(id).classList.remove("show")}
+document.getElementById("hwForm").addEventListener("submit",e=>{e.preventDefault();const id=document.getElementById("hwId").value;const data={title:document.getElementById("hwTitle").value.trim(),subject:document.getElementById("hwSubject").value.trim(),due:document.getElementById("hwDue").value,detail:document.getElementById("hwDetail").value.trim()};if(!data.title)return;const old=items.find(x=>x.id===id);if(old)Object.assign(old,data);else items.push({id:crypto.randomUUID(),...data,done:false,checked:false,problemNo:"",difficulty:"개념이 헷갈려요",memo:"",feedback:""});closeModal("hwModal");save()});
+function toggleDone(id,val){const x=items.find(v=>v.id===id);if(x){x.done=val;if(!val)x.checked=false;save()}}
+function toggleChecked(id){const x=items.find(v=>v.id===id);if(x){x.checked=!x.checked;save()}}
+function deleteHomework(id){const x=items.find(v=>v.id===id);if(x&&confirm(`‘${x.title}’ 숙제를 삭제할까?`)){items=items.filter(v=>v.id!==id);save()}}
+function openMemo(id){const x=items.find(v=>v.id===id);if(!x)return;document.getElementById("memoForm").reset();document.getElementById("memoHwId").value=id;document.getElementById("problemNo").value=x.problemNo||"";document.getElementById("difficulty").value=x.difficulty||"개념이 헷갈려요";document.getElementById("memoText").value=x.memo||"";document.getElementById("teacherFeedback").value=x.feedback||"";document.getElementById("teacherFeedbackField").style.display="grid";document.getElementById("memoModalTitle").textContent=x.title+" · 어려운 문제 메모";document.getElementById("memoModal").classList.add("show")}
+document.getElementById("memoForm").addEventListener("submit",e=>{e.preventDefault();const x=items.find(v=>v.id===document.getElementById("memoHwId").value);if(!x)return;x.problemNo=document.getElementById("problemNo").value.trim();x.difficulty=document.getElementById("difficulty").value;x.memo=document.getElementById("memoText").value.trim();if(role==="teacher")x.feedback=document.getElementById("teacherFeedback").value.trim();closeModal("memoModal");save()});
+document.getElementById("filters").addEventListener("click",e=>{const b=e.target.closest("button[data-filter]");if(!b)return;filter=b.dataset.filter;document.querySelectorAll("#filters button").forEach(x=>x.classList.toggle("active",x===b));render()});
+document.querySelectorAll(".modal-back").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id)}));
+let toastTimer;function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),1600)}
+render();
+</script>
+</body>
+</html>
