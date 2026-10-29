@@ -17,24 +17,36 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:1px solid
 <body>
 <div class="wrap">
   <header class="top">
-    <div><div class="eyebrow">STUDY SPACE / HOMEWORK</div><h1 class="title">숙제 관리</h1><p class="subtitle">.</p><p id="connectionStatus" class="muted" style="font-size:12px;margin-top:8px">구글 시트 연결 확인 중…</p></div>
+    <div><div class="eyebrow">STUDY SPACE / HOMEWORK</div><h1 class="title">숙제 관리</h1><p class="subtitle">해야 할 일부터 막혔던 문제까지, 한곳에 기록해.</p><p id="connectionStatus" class="muted" style="font-size:12px;margin-top:8px">구글 시트 연결 확인 중…</p></div>
   </header>
+  <section id="entryPanel" class="card" style="padding:20px;margin-bottom:18px">
+    <h2 style="margin:0 0 6px;font-size:18px">누구의 숙제인가요?</h2>
+    <p class="muted" style="margin:0 0 14px;font-size:13px">이름을 입력하면 해당 학생의 숙제만 보여.</p>
+    <form id="studentForm" style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="studentNameInput" type="text" maxlength="40" required placeholder="학생 이름 입력" style="flex:1;min-width:180px">
+      <button class="primary" type="submit">숙제창 열기</button>
+    </form>
+    <p class="muted" style="font-size:11px;margin:10px 0 0">선생님은 이름 칸에 ‘선생님’을 입력하면 전체 학생을 확인할 수 있어.</p>
+  </section>
+  <section id="appPanel" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px"><div><span class="muted" style="font-size:12px">현재 접속</span><div id="currentStudent" style="font-weight:750;font-size:18px"></div></div><button class="small" onclick="switchStudent()">다른 학생으로 전환</button></div>
   <section class="stats">
     <div class="stat"><label>전체 숙제</label><strong id="totalCount">0</strong></div>
     <div class="stat"><label>학생 완료</label><strong id="doneCount">0</strong></div>
     <div class="stat"><label>검사 완료</label><strong id="checkedCount">0</strong></div>
   </section>
   <section class="card progress"><div class="progress-head"><span>전체 진행률</span><strong id="progressText">0%</strong></div><div class="track"><div id="progressFill" class="fill"></div></div></section>
-  <div class="toolbar"><div class="filters" id="filters"><button class="active" data-filter="all">전체</button><button data-filter="todo">미완료</button><button data-filter="memo">메모 있음</button><button data-filter="review">검사 필요</button></div><button class="primary" onclick="openHomework()">+ 숙제 추가</button></div>
+  <div class="toolbar"><div class="filters" id="filters"><button class="active" data-filter="all">전체</button><button data-filter="todo">미완료</button><button data-filter="memo">메모 있음</button><button data-filter="review">검사 필요</button><button data-filter="archived">검사 완료 보관함</button></div><button class="primary" onclick="openHomework()">+ 숙제 추가</button></div>
   <main id="homeworkList" class="list"></main>
-  <div class="footer">HOMEWORK MANAGER · 현재 브라우저에 자동 저장</div>
+  </section>
+  <div class="footer">HOMEWORK MANAGER · Google Sheets에 저장</div>
 </div>
 
 <div id="hwModal" class="modal-back" role="dialog" aria-modal="true">
   <div class="modal"><h2 id="hwModalTitle">새 숙제 추가</h2>
     <form id="hwForm" class="form">
       <input id="hwId" type="hidden">
-      <div class="field"><label for="hwTitle">숙제 이름 *</label><input id="hwTitle" type="text" required maxlength="120" placeholder="예: 교재 42~45쪽 풀기"></div>
+      <div class="field" id="assignStudentField"><label for="hwStudent">학생</label><input id="hwStudent" type="text" maxlength="40" placeholder="학생 이름"></div><div class="field"><label for="hwTitle">숙제 이름 *</label><input id="hwTitle" type="text" required maxlength="120" placeholder="예: 교재 42~45쪽 풀기"></div>
       <div class="row"><div class="field"><label for="hwSubject">과목</label><input id="hwSubject" type="text" maxlength="30" placeholder="예: 수학"></div><div class="field"><label for="hwDue">마감일</label><input id="hwDue" type="date"></div></div>
       <div class="field"><label for="hwDetail">추가 설명 (선택)</label><textarea id="hwDetail" maxlength="1000" placeholder="범위, 조건, 전달 사항 등"></textarea></div>
       <div class="modal-actions"><button type="button" onclick="closeModal('hwModal')">취소</button><button class="primary" type="submit">저장</button></div>
@@ -48,7 +60,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:1px solid
       <input id="memoHwId" type="hidden">
       <div class="field"><label for="problemNo">문제 번호</label><input id="problemNo" type="text" maxlength="80" placeholder="예: 12번, 프린트 3번"></div>
       <div class="field"><label for="difficulty">어려웠던 이유</label><select id="difficulty"><option value="개념이 헷갈려요">개념이 헷갈려요</option><option value="풀이가 막혔어요">풀이가 막혔어요</option><option value="계산 실수">계산 실수</option><option value="문제 해석이 어려워요">문제 해석이 어려워요</option><option value="기타">기타</option></select></div>
-      <div class="field"><label for="memoText">내 메모</label><textarea id="memoText" maxlength="2000" placeholder="어디까지 풀었는지, 무엇이 궁금한지 적기."></textarea></div>
+      <div class="field"><label for="memoText">내 메모</label><textarea id="memoText" maxlength="2000" placeholder="어디까지 풀었는지, 무엇이 궁금한지 적어 봐."></textarea></div>
       <div id="teacherFeedbackField" class="field" style="display:none"><label for="teacherFeedback">선생님 피드백</label><textarea id="teacherFeedback" maxlength="2000" placeholder="설명할 내용이나 다음 수업에서 확인할 점"></textarea></div>
       <div class="modal-actions"><button type="button" onclick="closeModal('memoModal')">취소</button><button class="primary" type="submit">메모 저장</button></div>
     </form>
@@ -59,6 +71,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:1px solid
 const API_URL = "https://script.google.com/macros/s/AKfycbyliJ_aWpqLhqCDepGNOf2puJY-HvM8Xi1WlN9ZvWzpfxxd2-dR0r9fR4DxQxjjR_o/exec";
 const STORAGE_KEY = "homework-manager-v1";
 let items = [], filter = "all", remoteIds = new Set(), toastTimer;
+let currentStudent = sessionStorage.getItem("homework-student") || "";
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function fmtDate(d){if(!d)return "마감일 미정"; if(typeof d!=="string") d=String(d); const match=d.match(/^(\d{4}-\d{2}-\d{2})/); if(match)d=match[1]; if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return d; const [y,m,day]=d.split("-");return `${y}.${m}.${day}`}
 function isOverdue(x){return x.due&&!x.done&&x.due<new Date().toLocaleDateString("sv-SE")}
@@ -79,9 +92,9 @@ async function loadRemote(){
  setStatus("구글 시트에서 숙제 불러오는 중…");
  try{
   const result=await api("list");
-  items=(result.items||[]).map(x=>({...x,id:String(x.id),title:String(x.title||""),subject:String(x.subject||""),due:normalizeDate(x.due),detail:String(x.detail||""),done:Boolean(x.done),checked:Boolean(x.checked),problemNo:String(x.problemNo||""),difficulty:String(x.difficulty||"개념이 헷갈려요"),memo:String(x.memo||""),feedback:String(x.feedback||"")}));
+  items=(result.items||[]).map(x=>({...x,id:String(x.id),student:String(x.student||""),title:String(x.title||""),subject:String(x.subject||""),due:normalizeDate(x.due),detail:String(x.detail||""),done:Boolean(x.done),checked:Boolean(x.checked),problemNo:String(x.problemNo||""),difficulty:String(x.difficulty||"개념이 헷갈려요"),memo:String(x.memo||""),feedback:String(x.feedback||"")}));
   remoteIds=new Set(items.map(x=>x.id));
-  render();setStatus("구글 시트 연결됨 · 변경 사항은 자동 저장돼",true);
+  updateEntryUI(); render();setStatus("구글 시트 연결됨 · 변경 사항은 자동 저장돼",true);
  }catch(err){
   setStatus("연결 실패: "+err.message);
   showToast("구글 시트 연결 실패");
@@ -98,26 +111,28 @@ async function save(){
 }
 function escDate(d){return esc(d)}
 function render(){
- const done=items.filter(x=>x.done).length, checked=items.filter(x=>x.checked).length, pct=items.length?Math.round(done/items.length*100):0;
- document.getElementById("totalCount").textContent=items.length;document.getElementById("doneCount").textContent=done;document.getElementById("checkedCount").textContent=checked;document.getElementById("progressText").textContent=pct+"%";document.getElementById("progressFill").style.width=pct+"%";
- const filtered=items.filter(x=>filter==="all"||(filter==="todo"&&!x.done)||(filter==="memo"&&!!(x.memo||x.feedback))||(filter==="review"&&x.done&&!x.checked));
+ const visibleItems=currentStudent==="선생님" ? items : items.filter(x=>x.student===currentStudent);
+ const activeItems=visibleItems.filter(x=>!x.checked);
+ const done=activeItems.filter(x=>x.done).length, checked=visibleItems.filter(x=>x.checked).length, pct=activeItems.length?Math.round(done/activeItems.length*100):0;
+ document.getElementById("totalCount").textContent=activeItems.length;document.getElementById("doneCount").textContent=activeItems.filter(x=>x.done).length;document.getElementById("checkedCount").textContent=checked;document.getElementById("progressText").textContent=pct+"%";document.getElementById("progressFill").style.width=pct+"%";
+ const filtered=visibleItems.filter(x=>filter==="archived"?x.checked:!x.checked&&(filter==="all"||(filter==="todo"&&!x.done)||(filter==="memo"&&!!(x.memo||x.feedback))||(filter==="review"&&x.done&&!x.checked)));
  const list=document.getElementById("homeworkList");
- if(!filtered.length){list.innerHTML='<div class="empty">아직 표시할 숙제가 없어.<br><span class="muted">위의 ‘숙제 추가’ 버튼으로 시작해 봐.</span></div>';return}
+ if(!filtered.length){list.innerHTML=filter==="archived"?'<div class="empty">검사 완료된 숙제가 아직 없어.</div>':'<div class="empty">아직 표시할 숙제가 없어.<br><span class="muted">위의 ‘숙제 추가’ 버튼으로 시작해 봐.</span></div>';return}
  list.innerHTML=filtered.slice().sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999")).map(x=>{
  const overdue=isOverdue(x);
  return `<article class="card homework ${x.done?'done':''}">
   <div class="hw-top"><input class="check" type="checkbox" aria-label="학생 완료" ${x.done?'checked':''} onchange="toggleDone('${esc(x.id)}',this.checked)">
-   <div class="hw-main"><div class="hw-title">${esc(x.title)}</div><div class="meta">${x.subject?`<span class="pill subject">${esc(x.subject)}</span>`:""}<span class="pill ${overdue?'overdue':''}">${overdue?'마감 지남 · ':''}${esc(fmtDate(x.due))}</span>${x.done?'<span class="pill ok">학생 완료</span>':'<span class="pill">미완료</span>'}${x.checked?'<span class="pill ok">검사 완료</span>':(x.done?'<span class="pill">검사 필요</span>':'')}</div>${x.detail?`<p class="muted" style="margin:10px 0 0;white-space:pre-wrap">${esc(x.detail)}</p>`:""}</div>
+   <div class="hw-main"><div class="hw-title">${esc(x.title)}</div>${currentStudent==="선생님"?`<div class="muted" style="font-size:12px;margin-top:3px">학생: ${esc(x.student||"미지정")}</div>`:""}<div class="meta">${x.subject?`<span class="pill subject">${esc(x.subject)}</span>`:""}<span class="pill ${overdue?'overdue':''}">${overdue?'마감 지남 · ':''}${esc(fmtDate(x.due))}</span>${x.done?'<span class="pill ok">학생 완료</span>':'<span class="pill">미완료</span>'}${x.checked?'<span class="pill ok">검사 완료</span>':(x.done?'<span class="pill">검사 필요</span>':'')}</div>${x.detail?`<p class="muted" style="margin:10px 0 0;white-space:pre-wrap">${esc(x.detail)}</p>`:""}</div>
   </div>
   <div class="actions" style="margin-top:13px"><button class="small" onclick="openMemo('${esc(x.id)}')">${x.memo?'메모 보기·수정':'어려운 문제 메모'}</button><button class="small" onclick="toggleChecked('${esc(x.id)}')">${x.checked?'검사 완료 해제':'검사 완료 표시'}</button><button class="small" onclick="editHomework('${esc(x.id)}')">수정</button><button class="small danger" onclick="deleteHomework('${esc(x.id)}')">삭제</button></div>
   ${(x.memo||x.feedback)?`<div class="memo-area"><div class="memo-head"><span>문제 메모 ${x.problemNo?`· ${esc(x.problemNo)}`:""}</span><span class="pill">${esc(x.difficulty||"메모")}</span></div>${x.memo?`<div class="memo-preview">${esc(x.memo)}</div>`:'<div class="memo-empty">학생 메모 없음</div>'}${x.feedback?`<div class="teacher-note"><strong>선생님 피드백</strong><br>${esc(x.feedback)}</div>`:''}</div>`:""}
  </article>`;
  }).join("");
 }
-function openHomework(id=null){const x=items.find(v=>v.id===id);document.getElementById("hwForm").reset();document.getElementById("hwId").value=x?.id||"";document.getElementById("hwTitle").value=x?.title||"";document.getElementById("hwSubject").value=x?.subject||"";document.getElementById("hwDue").value=x?.due||"";document.getElementById("hwDetail").value=x?.detail||"";document.getElementById("hwModalTitle").textContent=x?"숙제 수정":"새 숙제 추가";document.getElementById("hwModal").classList.add("show");document.getElementById("hwTitle").focus()}
+function openHomework(id=null){const x=items.find(v=>v.id===id);document.getElementById("hwForm").reset();document.getElementById("hwId").value=x?.id||"";document.getElementById("hwStudent").value=x?.student||(currentStudent==="선생님"?"":currentStudent);document.getElementById("assignStudentField").style.display=currentStudent==="선생님"?"grid":"none";document.getElementById("hwTitle").value=x?.title||"";document.getElementById("hwSubject").value=x?.subject||"";document.getElementById("hwDue").value=x?.due||"";document.getElementById("hwDetail").value=x?.detail||"";document.getElementById("hwModalTitle").textContent=x?"숙제 수정":"새 숙제 추가";document.getElementById("hwModal").classList.add("show");document.getElementById("hwTitle").focus()}
 function editHomework(id){openHomework(id)}
 function closeModal(id){document.getElementById(id).classList.remove("show")}
-document.getElementById("hwForm").addEventListener("submit",e=>{e.preventDefault();const id=document.getElementById("hwId").value;const data={title:document.getElementById("hwTitle").value.trim(),subject:document.getElementById("hwSubject").value.trim(),due:document.getElementById("hwDue").value,detail:document.getElementById("hwDetail").value.trim()};if(!data.title)return;const old=items.find(x=>x.id===id);if(old)Object.assign(old,data);else items.push({id:crypto.randomUUID(),...data,done:false,checked:false,problemNo:"",difficulty:"개념이 헷갈려요",memo:"",feedback:""});closeModal("hwModal");save()});
+document.getElementById("hwForm").addEventListener("submit",e=>{e.preventDefault();const id=document.getElementById("hwId").value;const data={student:currentStudent==="선생님"?document.getElementById("hwStudent").value.trim():currentStudent,title:document.getElementById("hwTitle").value.trim(),subject:document.getElementById("hwSubject").value.trim(),due:document.getElementById("hwDue").value,detail:document.getElementById("hwDetail").value.trim()};if(!data.title||!data.student){showToast("학생 이름과 숙제 이름을 확인해 줘");return}const old=items.find(x=>x.id===id);if(old)Object.assign(old,data);else items.push({id:crypto.randomUUID(),...data,done:false,checked:false,problemNo:"",difficulty:"개념이 헷갈려요",memo:"",feedback:""});closeModal("hwModal");save()});
 function toggleDone(id,val){const x=items.find(v=>v.id===id);if(x){x.done=val;if(!val)x.checked=false;save()}}
 function toggleChecked(id){const x=items.find(v=>v.id===id);if(x){x.checked=!x.checked;save()}}
 async function deleteHomework(id){const x=items.find(v=>v.id===id);if(!x||!confirm(`‘${x.title}’ 숙제를 삭제할까?`))return;items=items.filter(v=>v.id!==id);render();try{await api("delete",{id});remoteIds.delete(id);setStatus("삭제 완료 · 구글 시트와 동기화됨",true);showToast("삭제했어")}catch(err){setStatus("삭제 실패: "+err.message);showToast("삭제에 실패했어")}}
@@ -126,7 +141,10 @@ document.getElementById("memoForm").addEventListener("submit",e=>{e.preventDefau
 document.getElementById("filters").addEventListener("click",e=>{const b=e.target.closest("button[data-filter]");if(!b)return;filter=b.dataset.filter;document.querySelectorAll("#filters button").forEach(x=>x.classList.toggle("active",x===b));render()});
 document.querySelectorAll(".modal-back").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id)}));
 function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2200)}
-render();loadRemote();
+function updateEntryUI(){const logged=!!currentStudent;document.getElementById("entryPanel").style.display=logged?"none":"block";document.getElementById("appPanel").style.display=logged?"block":"none";document.getElementById("currentStudent").textContent=currentStudent==="선생님"?"선생님 · 전체 학생":currentStudent;if(logged)render()}
+function switchStudent(){currentStudent="";sessionStorage.removeItem("homework-student");filter="all";document.querySelectorAll("#filters button").forEach(b=>b.classList.toggle("active",b.dataset.filter==="all"));updateEntryUI()}
+document.getElementById("studentForm").addEventListener("submit",e=>{e.preventDefault();const n=document.getElementById("studentNameInput").value.trim();if(!n)return;currentStudent=n;sessionStorage.setItem("homework-student",n);filter="all";document.querySelectorAll("#filters button").forEach(b=>b.classList.toggle("active",b.dataset.filter==="all"));updateEntryUI();render()});
+updateEntryUI();render();loadRemote();
 </script>
 </body>
 </html>
