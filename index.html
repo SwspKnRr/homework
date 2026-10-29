@@ -17,7 +17,7 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:1px solid
 <body>
 <div class="wrap">
   <header class="top">
-    <div><div class="eyebrow">STUDY SPACE / HOMEWORK</div><h1 class="title">숙제 관리</h1><p class="subtitle">해야 할 일부터 막혔던 문제까지, 한곳에 기록해.</p></div>
+    <div><div class="eyebrow">STUDY SPACE / HOMEWORK</div><h1 class="title">숙제 관리</h1><p class="subtitle">해야 할 일부터 막혔던 문제까지, 한곳에 기록해.</p><p id="connectionStatus" class="muted" style="font-size:12px;margin-top:8px">구글 시트 연결 확인 중…</p></div>
   </header>
   <section class="stats">
     <div class="stat"><label>전체 숙제</label><strong id="totalCount">0</strong></div>
@@ -56,28 +56,60 @@ button,input,select,textarea{font:inherit}button{cursor:pointer;border:1px solid
 </div>
 <div id="toast" class="toast"></div>
 <script>
+const API_URL = "https://script.google.com/macros/s/AKfycbyliJ_aWpqLhqCDepGNOf2puJY-HvM8Xi1WlN9ZvWzpfxxd2-dR0r9fR4DxQxjjR_o/exec";
 const STORAGE_KEY = "homework-manager-v1";
-let items = loadItems(), filter = "all";
-function loadItems(){try{const v=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");return Array.isArray(v)?v:[]}catch{return []}}
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(items));render();showToast("저장했어")}
+let items = [], filter = "all", remoteIds = new Set(), toastTimer;
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function fmtDate(d){if(!d)return "마감일 미정";const [y,m,day]=d.split("-");return `${y}.${m}.${day}`}
-function isOverdue(x){return x.due&&!x.done&&x.due<new Date().toLocaleDateString("en-CA")}
+function fmtDate(d){if(!d)return "마감일 미정"; if(typeof d!=="string") d=String(d); const match=d.match(/^(\d{4}-\d{2}-\d{2})/); if(match)d=match[1]; if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return d; const [y,m,day]=d.split("-");return `${y}.${m}.${day}`}
+function isOverdue(x){return x.due&&!x.done&&x.due<new Date().toLocaleDateString("sv-SE")}
+function setStatus(msg, good=false){const el=document.getElementById("connectionStatus");el.textContent=msg;el.style.color=good?"var(--accent2)":"var(--yellow)"}
+function api(action, params={}) {
+ return new Promise((resolve,reject)=>{
+  const cb="gsCb_"+Date.now()+"_"+Math.random().toString(36).slice(2);
+  const script=document.createElement("script");
+  const timer=setTimeout(()=>{cleanup();reject(new Error("응답 시간이 초과됐어. 배포 권한과 URL을 확인해 줘."))},15000);
+  function cleanup(){clearTimeout(timer);delete window[cb];script.remove()}
+  window[cb]=(result)=>{cleanup();if(result&&result.ok)resolve(result);else reject(new Error(result?.error||"구글 시트 요청에 실패했어."))};
+  const query=new URLSearchParams({action,callback:cb,...params});
+  script.onerror=()=>{cleanup();reject(new Error("구글 시트에 연결할 수 없어. 웹 앱 배포 설정을 확인해 줘."))};
+  script.src=API_URL+"?"+query.toString();document.body.appendChild(script);
+ });
+}
+async function loadRemote(){
+ setStatus("구글 시트에서 숙제 불러오는 중…");
+ try{
+  const result=await api("list");
+  items=(result.items||[]).map(x=>({...x,id:String(x.id),title:String(x.title||""),subject:String(x.subject||""),due:normalizeDate(x.due),detail:String(x.detail||""),done:Boolean(x.done),checked:Boolean(x.checked),problemNo:String(x.problemNo||""),difficulty:String(x.difficulty||"개념이 헷갈려요"),memo:String(x.memo||""),feedback:String(x.feedback||"")}));
+  remoteIds=new Set(items.map(x=>x.id));
+  render();setStatus("구글 시트 연결됨 · 변경 사항은 자동 저장돼",true);
+ }catch(err){
+  setStatus("연결 실패: "+err.message);
+  showToast("구글 시트 연결 실패");
+ }
+}
+function normalizeDate(v){if(!v)return "";if(typeof v==="string"){const m=v.match(/^(\d{4}-\d{2}-\d{2})/);return m?m[1]:v}return ""}
+async function save(){
+ render();setStatus("구글 시트에 저장 중…");
+ try{
+  // Save all current records so every edit is reflected in the shared sheet.
+  for(const item of items){await api("save",{data:JSON.stringify(item)});remoteIds.add(item.id)}
+  setStatus("저장 완료 · 구글 시트와 동기화됨",true);showToast("구글 시트에 저장했어");
+ }catch(err){setStatus("저장 실패: "+err.message);showToast("저장에 실패했어")}
+}
+function escDate(d){return esc(d)}
 function render(){
  const done=items.filter(x=>x.done).length, checked=items.filter(x=>x.checked).length, pct=items.length?Math.round(done/items.length*100):0;
  document.getElementById("totalCount").textContent=items.length;document.getElementById("doneCount").textContent=done;document.getElementById("checkedCount").textContent=checked;document.getElementById("progressText").textContent=pct+"%";document.getElementById("progressFill").style.width=pct+"%";
- const shown=items.filter(x=>filter==="all"||filter==="todo"?! (filter==="todo"&&!x.done) : filter==="memo"?!!(x.memo||x.feedback):filter==="review"?x.done&&!x.checked:true);
- // Use explicit filter logic to keep each view predictable.
  const filtered=items.filter(x=>filter==="all"||(filter==="todo"&&!x.done)||(filter==="memo"&&!!(x.memo||x.feedback))||(filter==="review"&&x.done&&!x.checked));
  const list=document.getElementById("homeworkList");
  if(!filtered.length){list.innerHTML='<div class="empty">아직 표시할 숙제가 없어.<br><span class="muted">위의 ‘숙제 추가’ 버튼으로 시작해 봐.</span></div>';return}
  list.innerHTML=filtered.slice().sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999")).map(x=>{
  const overdue=isOverdue(x);
  return `<article class="card homework ${x.done?'done':''}">
-  <div class="hw-top"><input class="check" type="checkbox" aria-label="학생 완료" ${x.done?'checked':''} onchange="toggleDone('${x.id}',this.checked)">
+  <div class="hw-top"><input class="check" type="checkbox" aria-label="학생 완료" ${x.done?'checked':''} onchange="toggleDone('${esc(x.id)}',this.checked)">
    <div class="hw-main"><div class="hw-title">${esc(x.title)}</div><div class="meta">${x.subject?`<span class="pill subject">${esc(x.subject)}</span>`:""}<span class="pill ${overdue?'overdue':''}">${overdue?'마감 지남 · ':''}${esc(fmtDate(x.due))}</span>${x.done?'<span class="pill ok">학생 완료</span>':'<span class="pill">미완료</span>'}${x.checked?'<span class="pill ok">검사 완료</span>':(x.done?'<span class="pill">검사 필요</span>':'')}</div>${x.detail?`<p class="muted" style="margin:10px 0 0;white-space:pre-wrap">${esc(x.detail)}</p>`:""}</div>
   </div>
-  <div class="actions" style="margin-top:13px"><button class="small" onclick="openMemo('${x.id}')">${x.memo?'메모 보기·수정':'어려운 문제 메모'}</button><button class="small" onclick="toggleChecked('${x.id}')">${x.checked?'검사 완료 해제':'검사 완료 표시'}</button><button class="small" onclick="editHomework('${x.id}')">수정</button><button class="small danger" onclick="deleteHomework('${x.id}')">삭제</button></div>
+  <div class="actions" style="margin-top:13px"><button class="small" onclick="openMemo('${esc(x.id)}')">${x.memo?'메모 보기·수정':'어려운 문제 메모'}</button><button class="small" onclick="toggleChecked('${esc(x.id)}')">${x.checked?'검사 완료 해제':'검사 완료 표시'}</button><button class="small" onclick="editHomework('${esc(x.id)}')">수정</button><button class="small danger" onclick="deleteHomework('${esc(x.id)}')">삭제</button></div>
   ${(x.memo||x.feedback)?`<div class="memo-area"><div class="memo-head"><span>문제 메모 ${x.problemNo?`· ${esc(x.problemNo)}`:""}</span><span class="pill">${esc(x.difficulty||"메모")}</span></div>${x.memo?`<div class="memo-preview">${esc(x.memo)}</div>`:'<div class="memo-empty">학생 메모 없음</div>'}${x.feedback?`<div class="teacher-note"><strong>선생님 피드백</strong><br>${esc(x.feedback)}</div>`:''}</div>`:""}
  </article>`;
  }).join("");
@@ -88,13 +120,13 @@ function closeModal(id){document.getElementById(id).classList.remove("show")}
 document.getElementById("hwForm").addEventListener("submit",e=>{e.preventDefault();const id=document.getElementById("hwId").value;const data={title:document.getElementById("hwTitle").value.trim(),subject:document.getElementById("hwSubject").value.trim(),due:document.getElementById("hwDue").value,detail:document.getElementById("hwDetail").value.trim()};if(!data.title)return;const old=items.find(x=>x.id===id);if(old)Object.assign(old,data);else items.push({id:crypto.randomUUID(),...data,done:false,checked:false,problemNo:"",difficulty:"개념이 헷갈려요",memo:"",feedback:""});closeModal("hwModal");save()});
 function toggleDone(id,val){const x=items.find(v=>v.id===id);if(x){x.done=val;if(!val)x.checked=false;save()}}
 function toggleChecked(id){const x=items.find(v=>v.id===id);if(x){x.checked=!x.checked;save()}}
-function deleteHomework(id){const x=items.find(v=>v.id===id);if(x&&confirm(`‘${x.title}’ 숙제를 삭제할까?`)){items=items.filter(v=>v.id!==id);save()}}
+async function deleteHomework(id){const x=items.find(v=>v.id===id);if(!x||!confirm(`‘${x.title}’ 숙제를 삭제할까?`))return;items=items.filter(v=>v.id!==id);render();try{await api("delete",{id});remoteIds.delete(id);setStatus("삭제 완료 · 구글 시트와 동기화됨",true);showToast("삭제했어")}catch(err){setStatus("삭제 실패: "+err.message);showToast("삭제에 실패했어")}}
 function openMemo(id){const x=items.find(v=>v.id===id);if(!x)return;document.getElementById("memoForm").reset();document.getElementById("memoHwId").value=id;document.getElementById("problemNo").value=x.problemNo||"";document.getElementById("difficulty").value=x.difficulty||"개념이 헷갈려요";document.getElementById("memoText").value=x.memo||"";document.getElementById("teacherFeedback").value=x.feedback||"";document.getElementById("teacherFeedbackField").style.display="grid";document.getElementById("memoModalTitle").textContent=x.title+" · 어려운 문제 메모";document.getElementById("memoModal").classList.add("show")}
-document.getElementById("memoForm").addEventListener("submit",e=>{e.preventDefault();const x=items.find(v=>v.id===document.getElementById("memoHwId").value);if(!x)return;x.problemNo=document.getElementById("problemNo").value.trim();x.difficulty=document.getElementById("difficulty").value;x.memo=document.getElementById("memoText").value.trim();if(role==="teacher")x.feedback=document.getElementById("teacherFeedback").value.trim();closeModal("memoModal");save()});
+document.getElementById("memoForm").addEventListener("submit",e=>{e.preventDefault();const x=items.find(v=>v.id===document.getElementById("memoHwId").value);if(!x)return;x.problemNo=document.getElementById("problemNo").value.trim();x.difficulty=document.getElementById("difficulty").value;x.memo=document.getElementById("memoText").value.trim();x.feedback=document.getElementById("teacherFeedback").value.trim();closeModal("memoModal");save()});
 document.getElementById("filters").addEventListener("click",e=>{const b=e.target.closest("button[data-filter]");if(!b)return;filter=b.dataset.filter;document.querySelectorAll("#filters button").forEach(x=>x.classList.toggle("active",x===b));render()});
 document.querySelectorAll(".modal-back").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModal(m.id)}));
-let toastTimer;function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),1600)}
-render();
+function showToast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),2200)}
+render();loadRemote();
 </script>
 </body>
 </html>
